@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  *
  * @author gonghao
  * @modify by fangqin 2019/2/27
- * 引入泛型
+ * 引入泛型、重构map、set、list各种操作方法
  */
 @Service("redisTemplateService")
 public class RedisTemplateService implements IRedisTemplateService {
@@ -49,7 +49,7 @@ public class RedisTemplateService implements IRedisTemplateService {
      */
     @Override
     public String setKeyPrefix(String key) {
-        if (!Strings.isNullOrEmpty(keyPrefix)) {
+        if (Strings.isNullOrEmpty(keyPrefix)) {
             if (redisPropertyService != null) {
                 String prefix = redisPropertyService.getKeyPrefix();
                 if (!Strings.isNullOrEmpty(prefix)) {
