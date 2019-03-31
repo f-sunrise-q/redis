@@ -20,13 +20,6 @@ import java.util.stream.Collectors;
 
 /**
  * 基于spring和redis的redisTemplate工具类封装
- * 针对所有的map 都是以hm开头的方法
- * 针对所有的Set 都是以s开头的方法
- * 针对所有的List 都是以l开头的方法
- *
- * @author gonghao
- * @modify by fangqin 2019/2/27
- * 引入泛型、重构map、set、list各种操作方法
  */
 @Service("redisTemplateService")
 public class RedisTemplateService implements IRedisTemplateService {
@@ -131,7 +124,6 @@ public class RedisTemplateService implements IRedisTemplateService {
     //============================String=============================
 
     /**
-     * mod by fangqin 2019/2/27
      * 底层方法不希望抛出任何异常中断service中方法的执行，连接redis失败就正常返回null
      * <p>
      * 普通缓存获取
