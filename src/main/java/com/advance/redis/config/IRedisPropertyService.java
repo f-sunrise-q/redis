@@ -3,9 +3,6 @@ package com.advance.redis.config;
 /**
  * redis属性服务
  * 组件需实现该接口并配置相关信息
- *
- * @author gonghao
- * @create 2018-09-26 18:52
  **/
 public interface IRedisPropertyService {
 
