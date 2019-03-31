@@ -33,14 +33,6 @@ import java.lang.reflect.Method;
  * <p>
  * redis配置
  * </p>
- *
- * @author zhoujian9  2017/10/18
- * @version V1.0
- * @modificationHistory=========================逻辑或功能性重大变更记录
- * @modify by user: {gonghao} 2018/09/26
- * @modify by reason:{redisConnectionFactory}:{修改连接池配置，连接信息由组件提供，不再采用默认获取组件ID+redis+@parent组合（组件不一定这样配置）}
- * @modify by user: {fangqin} 2019/02/28
- * 增加maxIdle、maxWait等参数的设置
  */
 @Configuration
 @EnableCaching
