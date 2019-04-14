@@ -16,15 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.Expression;
+import org.springframework.expression.spel.SpelParserConfiguration;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Aspect
 @Component
@@ -51,6 +50,7 @@ public class SeashellCacheAspect {
         //获取SeashellCache注解
         Annotation annotation = getSeashellCacheAnno(point);
         //是否强制更新缓存
+        //todo list的强制更新有点儿问题,refresh=true时依然会插入多次
         if (annotation != null && !((SeashellCache) annotation).refresh()) {
 
             //获取redis key
@@ -73,7 +73,7 @@ public class SeashellCacheAspect {
 
             }
 
-            if (result != null) {
+            if (!isEmpty(result)) {
                 existKeySet.add(key);
                 return result;
             }
@@ -82,6 +82,24 @@ public class SeashellCacheAspect {
 
         //继续执行原方法
         return point.proceed();
+    }
+
+
+    private boolean isEmpty(Object obj){
+        if(obj == null){
+            return true;
+        }
+        if(obj instanceof  Collection){
+            return ((Collection) obj).isEmpty();
+        }
+
+        if(obj instanceof Map){
+            return ((Map) obj).isEmpty();
+        }
+        if(obj instanceof String){
+            return ((String) obj).isEmpty();
+        }
+        return false;
     }
 
     @AfterReturning(value = "pointcut()", returning = "result")
@@ -98,20 +116,24 @@ public class SeashellCacheAspect {
                     return;
                 }
 
+                //为了解决list同一值插入多次问题，修改为覆盖，先删除再插入
                 String valueType = ((SeashellCache) annotation).valueType();
                 switch (valueType) {
                     case SeashellCacheConstant.VALUE_TYPE_LIST:
                         if (result instanceof List) {
+                            redisTemplateService.remove(key);
                             redisTemplateService.setList(key, (List) result);
                         }
                         break;
                     case SeashellCacheConstant.VALUE_TYPE_MAP:
                         if (result instanceof Map) {
+                            redisTemplateService.remove(key);
                             redisTemplateService.setMap(key, (Map) result);
                         }
                         break;
                     case SeashellCacheConstant.VALUE_TYPE_SET:
                         if (result instanceof Set) {
+                            redisTemplateService.remove(key);
                             redisTemplateService.setSet(key, (Set) result);
                         }
                         break;
@@ -171,36 +193,58 @@ public class SeashellCacheAspect {
      * 通过表达式生成，若key不是表达式直接返回key
      *
      * @param expression
-     * @param param
+     * @param args
      * @return
      */
-    private String genKeyByExpression(String expression, Object... param) {
+    public String genKeyByExpression(String expression, Object[] args) {
         try {
             Expression cacheExpression = null;
-            if(expressionMap.containsKey(expression)){
+            if (expressionMap.containsKey(expression)) {
                 cacheExpression = expressionMap.get(expression);
-            }else{
-                SpelExpressionParser parser = new SpelExpressionParser();
+            } else {
+                SpelParserConfiguration spelParserConfiguration = new SpelParserConfiguration(true, true);
+                SpelExpressionParser parser = new SpelExpressionParser(spelParserConfiguration);
                 cacheExpression = parser.parseExpression(expression);
                 expressionMap.put(expression, cacheExpression);
             }
 
-            StandardEvaluationContext context = new StandardEvaluationContext();
-            if (param != null) {
-                Object[] afterDealParams = new Object[param.length];
-                for (int i = 0; i < param.length; i++) {
-                    if (param[i] == null) {
-                        afterDealParams[i] = "";
-                    } else {
-                        afterDealParams[i] = param[i];
-                    }
-                }
-                context.setVariable("p", afterDealParams);
+            RootObject rootObject = new RootObject();
+            if (args != null && (args.length > 0)) {
+               for(Object o :args){
+                   rootObject.getP().add(o);
+               }
             }
-            return cacheExpression.getValue(context, String.class);
+
+            StandardEvaluationContext context = new StandardEvaluationContext(rootObject);
+//            if (param != null) {
+//                Object[] afterDealParams = new Object[param.length];
+//                for (int i = 0; i < param.length; i++) {
+//                    if (param[i] == null) {
+//                        afterDealParams[i] = "";
+//                    } else {
+//                        afterDealParams[i] = param[i];
+//                    }
+//                }
+//                context.setVariable("p", afterDealParams);
+//            }
+            String result = cacheExpression.getValue(context,String.class);
+            return result != null ? result.toString() : "111";
         } catch (Exception e) {
-            logger.error("generate key by expression error, - [expression={},p={}] ", expression, param);
+            logger.error("generate key by expression error, - [expression={}] ", expression, e);
         }
         return expression;
+    }
+
+    public class RootObject {
+        List<Object> p = new ArrayList<>();
+
+        public List<Object> getP() {
+            return p;
+        }
+    }
+
+    public static void main(String[] args) {
+        SeashellCacheAspect seashellCacheAspect = new SeashellCacheAspect();
+        System.out.println(seashellCacheAspect.genKeyByExpression("p[0]", new Object[]{null}));
     }
 }

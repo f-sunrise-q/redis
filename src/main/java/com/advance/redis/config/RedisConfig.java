@@ -58,7 +58,7 @@ public class RedisConfig extends CachingConfigurerSupport {
             redisProperties = new RedisPropertiesPlus();
         }
         if (redisProperties.getPool() == null) {
-            redisProperties.setPool(new RedisProperties.Pool());
+            redisProperties.setPool(new RedisPropertiesPlus.PoolPlus());
         }
 
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
@@ -69,7 +69,7 @@ public class RedisConfig extends CachingConfigurerSupport {
         //最小能够保持idle状态的jedis实例数
         jedisPoolConfig.setMinIdle(redisProperties.getPool().getMinIdle());
         //当池内没有返回对象时，最大等待时间
-        jedisPoolConfig.setMaxWaitMillis(redisProperties.getPool().getMaxWait().toMillis());
+        jedisPoolConfig.setMaxWaitMillis(redisProperties.getPool().getMaxWait());
 
         //当调用borrow Object方法时，是否进行有效性检查 ,如果为true，则得到的jedis实例均是可用的
         jedisPoolConfig.setTestOnBorrow(redisProperties.isTestOnBorrow());

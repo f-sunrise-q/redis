@@ -31,4 +31,14 @@ public class AnnotationTest {
     public void testInsertObject(){
         testService.getTestBo("aaa", 1);
     }
+
+    @Test
+    public void testInsertSet(){
+        testService.addSet2Redis();
+    }
+
+    @Test
+    public void testInsertList(){
+        testService.addList2Redis();
+    }
 }

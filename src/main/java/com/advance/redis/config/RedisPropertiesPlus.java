@@ -3,6 +3,8 @@ package com.advance.redis.config;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
+
 @ConfigurationProperties(
         prefix = "spring.redis"
 )
@@ -14,7 +16,7 @@ public class RedisPropertiesPlus {
     private int port = 6379;
     private boolean ssl;
     private int timeout;
-    private RedisProperties.Pool pool;
+    private PoolPlus pool;
     private RedisProperties.Sentinel sentinel;
     private RedisProperties.Cluster cluster;
 
@@ -79,11 +81,11 @@ public class RedisPropertiesPlus {
         this.timeout = timeout;
     }
 
-    public RedisProperties.Pool getPool() {
+    public PoolPlus getPool() {
         return pool;
     }
 
-    public void setPool(RedisProperties.Pool pool) {
+    public void setPool(PoolPlus pool) {
         this.pool = pool;
     }
 
@@ -133,5 +135,47 @@ public class RedisPropertiesPlus {
 
     public void setTestWhileIdle(boolean testWhileIdle) {
         this.testWhileIdle = testWhileIdle;
+    }
+
+    /**
+     * 兼容springboot1.x和2.x
+     */
+    public static class PoolPlus{
+        private int maxIdle = 8;
+        private int minIdle = 0;
+        private int maxActive = 8;
+        private long maxWait = -1;
+
+        public int getMaxIdle() {
+            return maxIdle;
+        }
+
+        public void setMaxIdle(int maxIdle) {
+            this.maxIdle = maxIdle;
+        }
+
+        public int getMinIdle() {
+            return minIdle;
+        }
+
+        public void setMinIdle(int minIdle) {
+            this.minIdle = minIdle;
+        }
+
+        public int getMaxActive() {
+            return maxActive;
+        }
+
+        public void setMaxActive(int maxActive) {
+            this.maxActive = maxActive;
+        }
+
+        public long getMaxWait() {
+            return maxWait;
+        }
+
+        public void setMaxWait(long maxWait) {
+            this.maxWait = maxWait;
+        }
     }
 }
